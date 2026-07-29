@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Augment Studio</title>
 <link rel="icon" href="augment-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@600;700;800&family=Alegreya+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/html-to-image@1.11.11/dist/html-to-image.js"></script>
+<!-- Fonts and the rasterizer are served from this origin: a cross-origin font that
+     fails to embed makes the PNG export reflow text and overlap. -->
+<link rel="stylesheet" href="vendor/fonts/fonts.css">
+<script src="vendor/html-to-image.js"></script>
 <style>
   * { box-sizing: border-box; }
   body { margin: 0; background: #14121b; font-family: 'Alegreya Sans', sans-serif; }
@@ -304,6 +304,9 @@ function renderSaved() {
 }
 
 async function capturePng() {
+  // The capture copies each element's measured height, so the fonts must be
+  // ready before measuring — otherwise text rewraps in the PNG and overlaps.
+  if (document.fonts && document.fonts.ready) await document.fonts.ready;
   els.card.style.animation = "none";
   try { return await htmlToImage.toPng(els.card, { pixelRatio: 2 }); }
   finally { els.card.style.animation = ""; }
