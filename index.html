@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Augment Studio</title>
+<link rel="icon" href="augment-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya:wght@600;700;800&family=Alegreya+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/html-to-image@1.11.11/dist/html-to-image.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #14121b; font-family: 'Alegreya Sans', sans-serif; }
+  input, textarea, select { outline: none; }
+  @keyframes holoShift {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .page {
+    min-height: 100vh; display: flex; align-items: flex-start; justify-content: center;
+    gap: 36px; padding: 40px; flex-wrap: wrap;
+  }
+
+  /* ---- form panel ---- */
+  .panel {
+    width: 340px; display: flex; flex-direction: column; gap: 14px;
+    background: #1d1a28; border: 1px solid rgba(185,167,220,0.18);
+    border-radius: 16px; padding: 24px;
+  }
+  .panel h2 { margin: 0 0 4px; font-family: 'Alegreya', serif; font-weight: 800; font-size: 22px; color: #fff; }
+  .field { display: flex; flex-direction: column; gap: 5px; font-size: 13px; font-weight: 600; color: #b9a7dc; }
+  .field input[type=text], .field textarea, .field select {
+    background: #14121b; border: 1px solid rgba(185,167,220,0.25); border-radius: 8px;
+    padding: 9px 11px; color: #fff; font-size: 14px; font-family: 'Alegreya Sans', sans-serif;
+  }
+  .field textarea { resize: vertical; }
+  .row { display: flex; gap: 12px; }
+  .check {
+    display: flex; align-items: flex-end; gap: 7px; font-size: 13px; font-weight: 600;
+    color: #b9a7dc; padding-bottom: 10px; cursor: pointer;
+  }
+  .check input { accent-color: #b9a7dc; width: 16px; height: 16px; }
+  .file input { color: #8f88a3; font-size: 13px; }
+  .btn-primary {
+    flex: 1; background: linear-gradient(135deg, #9d8bc9, #b9a7dc); border: none; border-radius: 10px;
+    padding: 11px; color: #14121b; font-size: 14px; font-weight: 700;
+    font-family: 'Alegreya Sans', sans-serif; cursor: pointer;
+  }
+  .btn-ghost {
+    background: transparent; border: 1px solid rgba(185,167,220,0.4); border-radius: 10px;
+    padding: 11px 14px; color: #b9a7dc; font-size: 14px; font-weight: 600;
+    font-family: 'Alegreya Sans', sans-serif; cursor: pointer;
+  }
+  .btn-ghost.wide { padding: 11px; color: #d3c5ec; }
+  .btn-link {
+    background: transparent; border: none; color: #d3c5ec; font-size: 13px; font-weight: 600;
+    font-family: 'Alegreya Sans', sans-serif; cursor: pointer; text-decoration: underline;
+  }
+
+  /* ---- saved list ---- */
+  .saved {
+    margin-top: 10px; border-top: 1px solid rgba(185,167,220,0.15); padding-top: 14px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .saved-head { display: flex; align-items: center; justify-content: space-between; }
+  .saved-head span {
+    font-size: 13px; font-weight: 700; color: #b9a7dc; text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .saved-row {
+    display: flex; align-items: center; gap: 8px; background: #14121b;
+    border: 1px solid rgba(185,167,220,0.15); border-radius: 10px; padding: 8px 10px;
+  }
+  .saved-row .name {
+    flex: 1; font-size: 14px; color: #ece8f4; font-weight: 600;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .saved-row .rarity { font-size: 11px; font-weight: 700; }
+  .btn-edit {
+    background: transparent; border: 1px solid rgba(185,167,220,0.35); border-radius: 7px;
+    padding: 4px 9px; color: #b9a7dc; font-size: 12px; font-weight: 600;
+    font-family: 'Alegreya Sans', sans-serif; cursor: pointer;
+  }
+  .btn-del { background: transparent; border: none; color: #7a7390; font-size: 15px; cursor: pointer; padding: 2px 4px; }
+
+  /* ---- card ---- */
+  .preview { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .card-frame {
+    width: 340px; border-radius: 30px; padding: 13px; background-size: 180% 180%;
+    animation: holoShift 8s ease-in-out infinite; box-shadow: 0 10px 40px rgba(60,40,100,0.35);
+  }
+  .card-inner {
+    border-radius: 20px; background: linear-gradient(180deg, #16141f 0%, #0e0d15 100%);
+    border: 1px solid rgba(255,255,255,0.08); padding: 30px 22px 34px;
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+    text-align: center; min-height: 460px;
+  }
+  .card-icon { width: 130px; height: 130px; object-fit: contain; display: block; flex: none; }
+  .card-title {
+    margin: 0; font-family: 'Alegreya', serif; font-weight: 800; font-size: 30px;
+    line-height: 1.15; color: #fff; text-wrap: balance;
+  }
+  .card-effect {
+    margin: 0; font-weight: 600; font-size: 16px; line-height: 1.4; color: #ece8f4;
+    max-width: 250px; white-space: pre-wrap;
+  }
+  .card-desc {
+    margin: 0; font-weight: 400; font-size: 15px; line-height: 1.5; color: #cfc9dd;
+    max-width: 262px; white-space: pre-wrap;
+  }
+  .card-foot {
+    margin: auto 0 0; font-weight: 400; font-size: 15px; line-height: 1.5; color: #6b6579;
+    max-width: 250px; white-space: pre-wrap;
+  }
+  .status { font-size: 13px; color: #7a7390; min-height: 18px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="panel">
+    <h2>Augment Studio</h2>
+
+    <label class="field">Title
+      <input type="text" id="f-title">
+    </label>
+    <label class="field">Effect
+      <textarea id="f-effect" rows="2"></textarea>
+    </label>
+    <label class="field">Description
+      <textarea id="f-desc" rows="3"></textarea>
+    </label>
+    <label class="field">Footnote
+      <textarea id="f-foot" rows="2"></textarea>
+    </label>
+
+    <div class="row">
+      <label class="field" style="flex:1">Rarity
+        <select id="f-rarity">
+          <option>Prismatic</option>
+          <option>Gold</option>
+          <option>Silver</option>
+        </select>
+      </label>
+      <label class="check"><input type="checkbox" id="f-showfoot" checked>Footnote</label>
+    </div>
+
+    <label class="field file">Icon (PNG with transparency works best)
+      <input type="file" id="f-icon" accept="image/*">
+    </label>
+
+    <div class="row" style="margin-top:8px">
+      <button class="btn-primary" id="btn-save">Save augment</button>
+      <button class="btn-ghost" id="btn-new">New</button>
+    </div>
+    <button class="btn-ghost wide" id="btn-export">Export this card as PNG</button>
+
+    <div class="saved" id="saved-section" hidden>
+      <div class="saved-head">
+        <span>Saved augments</span>
+        <button class="btn-link" id="btn-export-all">Export all</button>
+      </div>
+      <div id="saved-list"></div>
+    </div>
+  </div>
+
+  <div class="preview">
+    <div class="card-frame" id="card">
+      <div class="card-inner">
+        <img class="card-icon" id="card-icon" src="augment-icon.png" alt="">
+        <h1 class="card-title" id="card-title"></h1>
+        <p class="card-effect" id="card-effect"></p>
+        <p class="card-desc" id="card-desc"></p>
+        <p class="card-foot" id="card-foot"></p>
+      </div>
+    </div>
+    <span class="status" id="status"></span>
+  </div>
+
+</div>
+
+<script>
+const GRADIENTS = {
+  Prismatic: "linear-gradient(135deg, #9d8bc9 0%, #b9a7dc 15%, #cde9d6 30%, #a9c6e8 42%, #c2aee6 55%, #d3a9e2 70%, #a893d4 85%, #9d8bc9 100%)",
+  Gold:      "linear-gradient(135deg, #8a6a24 0%, #e8c874 25%, #f7ecc2 45%, #d2a544 65%, #a37c2c 85%, #8a6a24 100%)",
+  Silver:    "linear-gradient(135deg, #7e8894 0%, #ccd4dc 25%, #f0f3f6 45%, #aab4bf 65%, #848e9a 85%, #7e8894 100%)"
+};
+const RARITY_COLORS = { Prismatic: "#c2aee6", Gold: "#e8c874", Silver: "#ccd4dc" };
+const STORAGE_KEY = "augment-studio-cards";
+
+const DEFAULT_CARD = {
+  title: "Biggest Snowball Ever",
+  effect: "Gain 100 Ability Haste on Snowball",
+  desc: "Your Snowball is now BIG and will not be blocked by Minions. Slow champions and deal additional Magic Damage.",
+  foot: "If you don't have one, gain a Snowball.",
+  rarity: "Prismatic",
+  showFoot: true,
+  icon: null
+};
+
+const $ = (id) => document.getElementById(id);
+const els = {
+  title: $("f-title"), effect: $("f-effect"), desc: $("f-desc"), foot: $("f-foot"),
+  rarity: $("f-rarity"), showFoot: $("f-showfoot"), icon: $("f-icon"),
+  card: $("card"), cardIcon: $("card-icon"), cardTitle: $("card-title"),
+  cardEffect: $("card-effect"), cardDesc: $("card-desc"), cardFoot: $("card-foot"),
+  status: $("status"), savedSection: $("saved-section"), savedList: $("saved-list")
+};
+
+let icon = null;          // data URL or null
+let editingId = null;
+let saved = [];
+
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) saved = JSON.parse(raw) || [];
+  } catch (e) { saved = []; }
+}
+
+function persist() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(saved)); }
+  catch (e) { setStatus("Could not save (storage full — try smaller icons)"); }
+}
+
+function setStatus(msg) { els.status.textContent = msg; }
+
+function currentData() {
+  return {
+    title: els.title.value,
+    effect: els.effect.value,
+    desc: els.desc.value,
+    foot: els.foot.value,
+    rarity: els.rarity.value,
+    showFoot: els.showFoot.checked,
+    icon: icon
+  };
+}
+
+function loadData(d, id) {
+  els.title.value = d.title || "";
+  els.effect.value = d.effect || "";
+  els.desc.value = d.desc || "";
+  els.foot.value = d.foot || "";
+  els.rarity.value = d.rarity || "Prismatic";
+  els.showFoot.checked = !!d.showFoot;
+  icon = d.icon || null;
+  els.icon.value = "";
+  editingId = id || null;
+  setStatus("");
+  render();
+}
+
+function render() {
+  const d = currentData();
+  els.cardTitle.textContent = d.title;
+  els.cardEffect.textContent = d.effect;
+  els.cardDesc.textContent = d.desc;
+  els.cardFoot.textContent = d.foot;
+  els.cardFoot.hidden = !d.showFoot;
+  els.cardIcon.src = d.icon || "augment-icon.png";
+  els.card.style.background = GRADIENTS[d.rarity] || GRADIENTS.Prismatic;
+  els.card.style.backgroundSize = "180% 180%";
+  $("btn-save").textContent = editingId ? "Update augment" : "Save augment";
+  renderSaved();
+}
+
+function renderSaved() {
+  els.savedSection.hidden = saved.length === 0;
+  els.savedList.replaceChildren();
+  saved.forEach((c) => {
+    const row = document.createElement("div");
+    row.className = "saved-row";
+
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = c.title || "Untitled";
+
+    const rarity = document.createElement("span");
+    rarity.className = "rarity";
+    rarity.textContent = c.rarity;
+    rarity.style.color = RARITY_COLORS[c.rarity] || "#c2aee6";
+
+    const edit = document.createElement("button");
+    edit.className = "btn-edit";
+    edit.textContent = "Edit";
+    edit.onclick = () => loadData(c, c.id);
+
+    const del = document.createElement("button");
+    del.className = "btn-del";
+    del.textContent = "✕";
+    del.onclick = () => {
+      saved = saved.filter((x) => x.id !== c.id);
+      if (editingId === c.id) editingId = null;
+      persist();
+      render();
+    };
+
+    row.append(name, rarity, edit, del);
+    els.savedList.append(row);
+  });
+}
+
+async function capturePng() {
+  els.card.style.animation = "none";
+  try { return await htmlToImage.toPng(els.card, { pixelRatio: 2 }); }
+  finally { els.card.style.animation = ""; }
+}
+
+function download(dataUrl, name) {
+  const a = document.createElement("a");
+  a.href = dataUrl;
+  a.download = (name || "augment").replace(/[^\w\- ]+/g, "").trim() + ".png";
+  a.click();
+}
+
+// ---- wiring ----
+["title", "effect", "desc", "foot"].forEach((k) => els[k].addEventListener("input", render));
+els.rarity.addEventListener("change", render);
+els.showFoot.addEventListener("change", render);
+
+els.icon.addEventListener("change", (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { icon = r.result; render(); };
+  r.readAsDataURL(f);
+});
+
+$("btn-save").addEventListener("click", () => {
+  const data = currentData();
+  if (editingId) {
+    saved = saved.map((c) => (c.id === editingId ? Object.assign({}, data, { id: editingId }) : c));
+  } else {
+    const id = Date.now().toString(36);
+    saved = saved.concat([Object.assign({}, data, { id: id })]);
+    editingId = id;
+  }
+  persist();
+  render();
+  setStatus("Saved ✓");
+});
+
+$("btn-new").addEventListener("click", () => {
+  loadData({ title: "New Augment", effect: "", desc: "", foot: "", rarity: "Prismatic", showFoot: true, icon: null }, null);
+});
+
+$("btn-export").addEventListener("click", async () => {
+  setStatus("Exporting…");
+  try {
+    download(await capturePng(), els.title.value);
+    setStatus("Exported ✓");
+  } catch (e) { setStatus("Export failed"); }
+});
+
+$("btn-export-all").addEventListener("click", async () => {
+  const keep = currentData(), keepId = editingId;
+  setStatus("Exporting…");
+  try {
+    for (const c of saved.slice()) {
+      loadData(c, c.id);
+      await new Promise((r) => setTimeout(r, 250));
+      download(await capturePng(), c.title);
+    }
+    const count = saved.length;
+    loadData(keep, keepId);
+    setStatus("Exported " + count + " cards ✓");
+  } catch (e) {
+    loadData(keep, keepId);
+    setStatus("Export failed");
+  }
+});
+
+loadSaved();
+loadData(DEFAULT_CARD, null);
+</script>
+</body>
+</html>
